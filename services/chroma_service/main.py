@@ -62,7 +62,7 @@ def search_vectors(request: SearchRequest):
         logger.info(f"Buscando vectores para: '{request.query}'")
         results = vector_db.similarity_search(request.query, k=request.k)
         logger.info(f"Encontrados {len(results)} documentos.")
-        return {"results": [doc.page_content for doc in results]}
+        return {"results": [doc for doc in results]}
     except Exception as e:
         logger.error(f"Error en búsqueda vectorial: {e}")
         raise HTTPException(status_code=500, detail=str(e))

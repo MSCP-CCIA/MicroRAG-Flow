@@ -25,7 +25,8 @@ app = FastAPI(title="Neo4j Graph Service")
 # 1. Cargar NLP
 try:
     logger.info("Cargando modelo Spacy...")
-    nlp = spacy.load("en_core_web_sm")
+    # Deshabilitamos componentes innecesarios para un endpoint rápido
+    nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
 except Exception as e:
     logger.warning(f"Modelo no encontrado ({e}). Descargando...")
     os.system("python -m spacy download en_core_web_sm")
@@ -39,8 +40,6 @@ if uri.startswith("tcp://"):
 user = config['neo4j']['user']
 password = os.getenv("NEO4J_PASSWORD")
 
-# Debug de seguridad (Ocultando parte de la pass)
-safe_pass = f"{password[:2]}***{password[-2:]}" if password else "None"
 logger.info(f"Configurando conexión Neo4j -> URI: {uri} | User: {user}")
 
 # 3. Conexión Robusta
@@ -77,21 +76,41 @@ def search_graph(request: QueryRequest):
 
     logger.info(f"Entidades extraídas: {entities}")
 
-    # B. Consulta Cypher
+    # B. Consulta Cypher (MODIFICADA para devolver metadata)
     cypher_query = """
     MATCH (e:Entity)<-[:MENTIONS]-(d:Document)
     WHERE e.name IN $names
-    RETURN DISTINCT d.text as content
+    RETURN DISTINCT d.id AS id, 
+                    d.type AS type,
+                    d.url AS url,
+                    d.path AS path, 
+                    d.text AS content
     LIMIT $limit
     """
 
     try:
         with driver.session() as session:
             result = session.run(cypher_query, names=entities, limit=request.limit)
-            contents = [record["content"] for record in result if record["content"]]
 
-        logger.info(f"Recuperados {len(contents)} contextos del grafo.")
-        return {"results": contents}
+            # C. Procesar y estructurar la respuesta con metadata
+            records_with_metadata = []
+            for record in result:
+                # El campo 'path' es clave para las imágenes; lo incluimos si existe
+                path_value = record["path"] if record["path"] else None
+
+                records_with_metadata.append({
+                    "content": record["content"],
+                    "metadata": {
+                        "id": record["id"],
+                        "type": record["type"],
+                        "url": record["url"],
+                        "path": path_value
+                    }
+                })
+
+        logger.info(f"Recuperados {len(records_with_metadata)} contextos del grafo.")
+        return {"results": records_with_metadata}
+
     except Exception as e:
         logger.error(f"Error ejecutando consulta Cypher: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
