@@ -1,0 +1,42 @@
+app_name: MicroRAG-Flow
+version: 1.0.0
+
+# --- MODELOS ---
+embeddings:
+  model_name: all-MiniLM-L6-v2
+  batch_size: 32
+  device: cpu
+
+llm:
+  # CAMBIO AQUI: Actualizado a la versión 2.5 Flash
+  model_name: gemini-2.5-flash
+  temperature: 0.0
+
+# --- DATABASES CONFIG ---
+chroma:
+  mode: http
+  host: 98.94.177.41
+  port: 8000
+  collection_name: multimodal_rag
+
+neo4j:
+  uri: bolt://localhost:7687
+  user: neo4j
+
+# --- RED DE MICROSERVICIOS ---
+microservices_urls:
+  chroma_api: http://localhost:8001/search
+  neo4j_api: http://localhost:8002/search
+
+# --- CARGA DE DATOS (LEGACY) ---
+execution:
+  mode: prod
+  test_limit: 50
+paths:
+  raw_data: ./data/raw
+files:
+  texts: MMQA_texts.jsonl.gz
+  tables: MMQA_tables.jsonl.gz
+  images: MMQA_images.jsonl.gz
+processing:
+  chunk_size: 5000

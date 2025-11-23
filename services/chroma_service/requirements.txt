@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+chromadb
+langchain-chroma
+langchain-huggingface
+python-dotenv
+pyyaml
