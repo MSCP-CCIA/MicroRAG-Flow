@@ -10,7 +10,7 @@ embeddings:
 llm:
   # CAMBIO AQUI: Actualizado a la versión 2.5 Flash
   model_name: gemini-2.5-flash
-  temperature: 0.0
+  temperature: 0.8
 
 # --- DATABASES CONFIG ---
 chroma:
