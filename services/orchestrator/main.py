@@ -61,10 +61,10 @@ class RagRequest(BaseModel):
 
 
 # --- PROMPT PARA REESCRITURA DE PREGUNTA ---
-contextualize_q_system_prompt = """Dada una historia de chat y la última pregunta del usuario 
-(que podría hacer referencia al contexto del historial), formula una pregunta independiente 
-que pueda entenderse sin el historial. NO respondas a la pregunta, solo reformúlala si es necesario 
-o devuélvela tal cual si ya es explícita."""
+contextualize_q_system_prompt = """Given a chat history and the user's last question 
+(which may refer to the context of the history), formulate an independent question 
+that can be understood without the history. Do NOT answer the question, just rephrase it if necessary 
+or return it as is if it is already explicit."""
 
 contextualize_q_prompt = ChatPromptTemplate.from_messages(
     [
@@ -193,7 +193,7 @@ async def rag_pipeline(req: RagRequest):
         Contexto:
         {formatted_context}
 
-        Pregunta (Clarificada): {query_to_search}
+        Question: {query_to_search}
         """
 
     message_parts = [{"type": "text", "text": prompt_text}]
